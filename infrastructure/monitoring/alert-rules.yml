@@ -1,0 +1,54 @@
+groups:
+  - name: ep13_training
+    interval: 60s
+    rules:
+      - alert: TrainingLossNaN
+        expr: train_loss != train_loss
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Training loss is NaN — training run failing"
+
+      - alert: TrainingStuck
+        expr: rate(train_step_total[10m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No training steps in 15 minutes — check for hangs"
+
+      - alert: RegressionSuiteFailure
+        expr: regression_suite_pass_rate < 0.95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fine-tuned model failing regression suite ({{ $value | humanizePercentage }})"
+
+  - name: ep13_serving
+    interval: 30s
+    rules:
+      - alert: HighAdapterLoadLatency
+        expr: histogram_quantile(0.99, adapter_load_duration_seconds) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Adapter load P99 latency > 2s"
+
+      - alert: LowAdapterCacheHitRate
+        expr: adapter_cache_hit_rate < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Adapter cache hit rate < 50% ({{ $value | humanizePercentage }})"
+
+      - alert: MultiLoRAHighP99Latency
+        expr: histogram_quantile(0.99, vllm_e2e_latency_seconds) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Multi-LoRA serving P99 > 5s"

@@ -1,0 +1,35 @@
+# Example configuration for qlora-llama3-8b
+base_model: meta-llama/Llama-3.1-8B-Instruct
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_compute_dtype: bfloat16
+
+datasets:
+  - path: ./data/train.jsonl
+    type: chat_template
+
+adapter: qlora
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_linear: true
+
+sequence_len: 2048
+sample_packing: true
+
+gradient_accumulation_steps: 4
+micro_batch_size: 4
+num_epochs: 3
+
+optimizer: adamw_8bit
+lr_scheduler: cosine
+learning_rate: 2.0e-4
+warmup_ratio: 0.03
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+bf16: true
+gradient_checkpointing: true
+flash_attention: true
+
+output_dir: ./outputs/qlora-llama3-8b

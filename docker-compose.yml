@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  # Multi-LoRA serving with vLLM
+  vllm-multilora:
+    image: vllm/vllm-openai:latest
+    command:
+      - --model
+      - meta-llama/Llama-3.1-8B-Instruct
+      - --enable-lora
+      - --max-loras
+      - "8"
+      - --max-lora-rank
+      - "32"
+      - --max-model-len
+      - "8192"
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ./adapters:/adapters
+      - ~/.cache/huggingface:/root/.cache/huggingface
+
+  # Prometheus for training + serving metrics
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/monitoring/alert-rules.yml:/etc/prometheus/rules/alert-rules.yml
+    ports:
+      - "9090:9090"
+
+  # Grafana dashboards
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:

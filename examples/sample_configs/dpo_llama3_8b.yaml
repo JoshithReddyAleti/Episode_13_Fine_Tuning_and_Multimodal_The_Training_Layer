@@ -1,0 +1,22 @@
+base_model: meta-llama/Llama-3.1-8B-Instruct
+adapter: qlora
+lora_r: 16
+lora_alpha: 32
+lora_target_linear: true
+
+rl: dpo
+rl_beta: 0.1
+
+datasets:
+  - path: ./data/preferences.jsonl
+    type: chat_template.preference
+
+num_epochs: 1
+micro_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 5e-6
+lr_scheduler: cosine
+warmup_ratio: 0.03
+bf16: true
+gradient_checkpointing: true
+output_dir: ./outputs/dpo-llama3-8b

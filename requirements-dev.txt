@@ -1,0 +1,20 @@
+-r requirements.txt
+
+# Testing
+pytest>=8
+pytest-asyncio
+pytest-cov
+hypothesis
+
+# Linting / typing
+ruff>=0.6
+mypy>=1.11
+types-PyYAML
+
+# Docs
+mkdocs
+mkdocs-material
+
+# Notebooks
+jupyter
+ipykernel

@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'vllm-multilora'
+    static_configs:
+      - targets: ['ep13-multilora-vllm:8000']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  - job_name: 'training-jobs'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: ep13-finetune
+
+rule_files:
+  - /etc/prometheus/rules/*.yml

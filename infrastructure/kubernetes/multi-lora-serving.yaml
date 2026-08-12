@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ep13-multilora-vllm
+  labels:
+    app: ep13-multilora-vllm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ep13-multilora-vllm
+  template:
+    metadata:
+      labels:
+        app: ep13-multilora-vllm
+    spec:
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          resources:
+            requests:
+              nvidia.com/gpu: "4"
+            limits:
+              nvidia.com/gpu: "4"
+          args:
+            - "--model"
+            - "meta-llama/Llama-3.1-70B-Instruct"
+            - "--enable-lora"
+            - "--max-loras"
+            - "16"
+            - "--max-lora-rank"
+            - "32"
+            - "--tensor-parallel-size"
+            - "4"
+            - "--max-model-len"
+            - "8192"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: adapters
+              mountPath: /adapters
+      volumes:
+        - name: adapters
+          persistentVolumeClaim:
+            claimName: adapters-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ep13-multilora-vllm
+spec:
+  selector:
+    app: ep13-multilora-vllm
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP

@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ep13-finetune-job
+  labels:
+    app: ep13-finetune
+    episode: "13"
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: trainer
+          image: your-registry/ep13-trainer:latest
+          resources:
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "64Gi"
+              cpu: "8"
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "128Gi"
+              cpu: "16"
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-credentials
+                  key: token
+            - name: WANDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wandb-credentials
+                  key: api-key
+            - name: OUTPUT_DIR
+              value: /mnt/models/output
+          volumeMounts:
+            - name: models
+              mountPath: /mnt/models
+            - name: data
+              mountPath: /mnt/data
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              accelerate launch -m axolotl.cli.train /mnt/data/config.yaml
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-pvc
